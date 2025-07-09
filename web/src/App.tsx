@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CreateRoom from "./pages/CreateRoom";
-import Room from "./pages/Room";
+import { Room } from "./pages/Room";
 
 const queryClient = new QueryClient();
 
