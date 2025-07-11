@@ -11,6 +11,7 @@ const RecordRoomAudio = () => {
 
   const [isRecording, setIsRecording] = useState(false);
   const recorder = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   function stopRecording() {
     setIsRecording(false);
@@ -18,11 +19,14 @@ const RecordRoomAudio = () => {
     if (recorder.current && recorder.current.state !== "inactive") {
       recorder.current.stop();
     }
+
+    // Libera o microfone
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
   }
 
   async function uploadAudio(audio: Blob) {
     const formData = new FormData();
-
     formData.append("file", audio, "audio.webm");
 
     const response = await fetch(
@@ -34,24 +38,25 @@ const RecordRoomAudio = () => {
     );
 
     const result = await response.json();
-
     console.log(result);
   }
 
   async function startRecording() {
     setIsRecording(true);
 
-    const audio = await navigator.mediaDevices.getUserMedia({
+    const audioStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
-        sampleRate: 44_100,
+        sampleRate: 44100,
       },
     });
 
-    recorder.current = new MediaRecorder(audio, {
+    streamRef.current = audioStream;
+
+    recorder.current = new MediaRecorder(audioStream, {
       mimeType: "audio/webm",
-      audioBitsPerSecond: 64_880,
+      audioBitsPerSecond: 64880,
     });
 
     recorder.current.ondataavailable = (event) => {
@@ -61,11 +66,11 @@ const RecordRoomAudio = () => {
     };
 
     recorder.current.onstart = () => {
-      console.log("Gravação iniciada!");
+      console.log("🎙️ Gravação iniciada!");
     };
 
     recorder.current.onstop = () => {
-      console.log("Gravação encerrada");
+      console.log("🛑 Gravação encerrada");
     };
 
     recorder.current.start();
@@ -76,13 +81,26 @@ const RecordRoomAudio = () => {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center gap-3 flex-col">
-      {isRecording ? (
-        <Button onClick={stopRecording}>Pausar Gravação</Button>
-      ) : (
-        <Button onClick={startRecording}>Gravar Áudio</Button>
-      )}
-      {isRecording ? <p>Gravando...</p> : <p>Aperte o botão para gravar</p>}
+    <div className="flex h-screen items-center justify-center bg-gray-950 text-white">
+      <div className="flex flex-col items-center gap-6 p-6 rounded-lg shadow-lg bg-gray-900">
+        <h1 className="text-2xl font-bold">Gravador de Áudio 🎤</h1>
+        {isRecording ? (
+          <Button
+            onClick={stopRecording}
+            className="bg-red-600 hover:bg-red-700">
+            Parar Gravação
+          </Button>
+        ) : (
+          <Button
+            onClick={startRecording}
+            className="bg-green-600 hover:bg-green-700">
+            Iniciar Gravação
+          </Button>
+        )}
+        <p className="text-sm text-gray-300">
+          {isRecording ? "🔴 Gravando..." : "Clique para começar a gravar"}
+        </p>
+      </div>
     </div>
   );
 };

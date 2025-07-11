@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateQuestionRequest } from "./types/create-question-request";
 import type { CreateQuestionResponse } from "./types/create-question-response";
+import type { GetRoomQuestionsResponse } from "./types/get-room-questions.response";
 
 export function useCreateQuestion(roomId: string) {
   const queryClient = useQueryClient();
@@ -23,8 +24,65 @@ export function useCreateQuestion(roomId: string) {
       return result;
     },
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["get-requestions", roomId] });
+    onMutate({ question }) {
+      const questions = queryClient.getQueryData<GetRoomQuestionsResponse>([
+        "get-questions",
+        roomId,
+      ]);
+
+      const questionsArray = questions ?? [];
+
+      const newQuestion = {
+        id: crypto.randomUUID(),
+        question,
+        answer: null,
+        createdAt: new Date().toISOString(),
+        isGeneratingAnswer: true,
+      };
+
+      queryClient.setQueryData<GetRoomQuestionsResponse>(
+        ["get-questions", roomId],
+        [newQuestion, ...questionsArray]
+      );
+
+      return { newQuestion, questions };
+    },
+
+    onError(_error, _variables, context) {
+      if (context?.questions) {
+        queryClient.setQueryData<GetRoomQuestionsResponse>(
+          ["get-questions", roomId],
+          context.questions
+        );
+      }
+    },
+
+    onSuccess: (data, _variables, context) => {
+      queryClient.setQueryData<GetRoomQuestionsResponse>(
+        ["get-questions", roomId],
+        (questions) => {
+          if (!questions) {
+            return questions;
+          }
+
+          if (!context.newQuestion) {
+            return questions;
+          }
+
+          return questions.map((question) => {
+            if (question.id === context.newQuestion.id) {
+              return {
+                ...question,
+                id: data.questionId,
+                answer: data.answer,
+                isGeneratingAnswer: false,
+              };
+            }
+
+            return question;
+          });
+        }
+      );
     },
   });
 }
