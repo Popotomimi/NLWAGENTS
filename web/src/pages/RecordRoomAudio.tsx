@@ -81,7 +81,7 @@ const RecordRoomAudio = () => {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-950 text-white">
+    <div className="flex h-screen items-center justify-center text-white">
       <div className="flex flex-col items-center gap-6 p-6 rounded-lg shadow-lg bg-gray-900">
         <h1 className="text-2xl font-bold">Gravador de Áudio 🎤</h1>
         {isRecording ? (

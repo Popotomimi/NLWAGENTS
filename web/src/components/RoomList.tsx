@@ -24,7 +24,7 @@ const RoomList = () => {
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {isLoading && (
-          <p className="text-nuted-foreground text-sm">Carregando salas...</p>
+          <p className="text-muted-foreground text-sm">Carregando salas...</p>
         )}
         {data?.map((room) => {
           return (
@@ -44,7 +44,7 @@ const RoomList = () => {
                 </div>
               </div>
               <span className="flex items-center gap-1 text-sm">
-                Entrar <ArrowRight className="size-3" />{" "}
+                Entrar <ArrowRight className="size-3" />
               </span>
             </Link>
           );
